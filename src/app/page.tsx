@@ -8,7 +8,6 @@ import ExpensesChart from '../components/dashboard/ExpensesChart';
 import IncomeChart from '../components/dashboard/IncomeChart';
 import AlertsTableDetailed from '../components/dashboard/AlertsTableDetailed';
 import SummaryTable from '../components/dashboard/SummaryTable';
-import InsightsSection from '../components/dashboard/InsightsSection';
 
 import { Transaction } from '../types/transaction';
 import { Presupuesto } from '../types/presupuesto';
@@ -74,11 +73,6 @@ export default function Home() {
   const [loadingPresupuestos, setLoadingPresupuestos] = React.useState<boolean>(true);
   const [errorTransactions, setErrorTransactions] = React.useState<string | null>(null);
   const [errorPresupuestos, setErrorPresupuestos] = React.useState<string | null>(null);
-
-  // Estados para Insights
-  const [insights, setInsights] = React.useState<any[]>([]);
-  const [loadingInsights, setLoadingInsights] = React.useState<boolean>(true);
-  const [errorInsights, setErrorInsights] = React.useState<string | null>(null);
 
   // Estado para Alertas Detalladas
   const [alertEntries, setAlertEntries] = React.useState<AlertEntry[]>([]);
@@ -194,50 +188,6 @@ export default function Home() {
     fetchPresupuestos();
   }, []);
 
-  // Fetch Insights
-  React.useEffect(() => {
-    const fetchInsights = async () => {
-      try {
-        setLoadingInsights(true);
-        const response = await fetch('/api/insights'); // Ruta de la API para obtener insights
-        if (!response.ok) throw new Error(`Error al cargar insights: ${response.statusText}`);
-        const data = await response.json();
-
-        console.log('Datos de Insights:', data); // Depuración
-
-        const mappedInsights = [
-          {
-            title: 'Mayor Gasto',
-            value: `$${data.mayorGasto.monto.toLocaleString('es-CL')}`,
-            description: `Categoría: ${data.mayorGasto.categoria} (${data.mayorGasto.porcentaje} del total)`,
-            color: 'red',
-          },
-          {
-            title: 'Ingresos Totales',
-            value: `$${data.ingresosTotales.toLocaleString('es-CL')}`,
-            description: 'Dentro del objetivo mensual',
-            color: 'green',
-          },
-          {
-            title: 'Desviación',
-            value: `$${data.desviacion.toLocaleString('es-CL')}`,
-            description: 'Mayor ingreso respecto al presupuesto',
-            color: 'blue',
-          },
-        ];
-
-        setInsights(mappedInsights);
-      } catch (err: any) {
-        console.error('Error en fetchInsights:', err);
-        setErrorInsights(err.message || 'Error desconocido');
-      } finally {
-        setLoadingInsights(false);
-      }
-    };
-
-    fetchInsights();
-  }, []);
-
   // Fetch UF values
   const fetchUfValues = async () => {
     try {
@@ -255,8 +205,8 @@ export default function Home() {
   }, []);
 
   // Manejar estados de carga y error
-  const isLoading = loadingTransactions || loadingPresupuestos || loadingInsights || loadingChartData;
-  const hasError = errorTransactions || errorPresupuestos || errorInsights || error;
+  const isLoading = loadingTransactions || loadingPresupuestos || loadingChartData;
+  const hasError = errorTransactions || errorPresupuestos || error;
 
   // Filtrar transacciones según las fechas de la tabla
   const filteredTransactions = React.useMemo(() => {
@@ -349,7 +299,7 @@ export default function Home() {
                 <MUI.CircularProgress />
               ) : hasError ? (
                 <MUI.Typography color="error">
-                  {errorTransactions || errorPresupuestos || errorInsights || error}
+                  {errorTransactions || errorPresupuestos || error}
                 </MUI.Typography>
               ) : (
                 <AlertsTableDetailed
@@ -357,16 +307,6 @@ export default function Home() {
                   formattedMonthYear={formattedMonthYear(chartStartDate, chartEndDate)} // Pasar fechas formateadas si es necesario
                   totalesPorTipo={[]} // Ajustar si es necesario
                 />
-              )}
-            </MUI.Grid>
-            {/* Sección de Insights */}
-            <MUI.Grid item xs={12}>
-              {loadingInsights ? (
-                <MUI.CircularProgress />
-              ) : errorInsights ? (
-                <MUI.Typography color="error">{errorInsights}</MUI.Typography>
-              ) : (
-                <InsightsSection insights={insights} />
               )}
             </MUI.Grid>
           </MUI.Grid>
