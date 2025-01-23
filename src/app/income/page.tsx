@@ -243,8 +243,7 @@ export default function IncomePage() {
   );
 
   // Calcular totales para el mes actual
-  const totalVariance = monthSummary ? monthSummary.total.actual - monthSummary.total.budget : 0;
-  const totalPercentage = monthSummary && monthSummary.total.budget !== 0 ? (totalVariance / monthSummary.total.budget) * 100 : 0;
+
 
   return (
     <MUI.Box sx={{ p: 3 }}>
