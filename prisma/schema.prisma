@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = "postgresql://pulsodb_owner:DkmJpg1P3xWA@ep-dark-violet-a5z55fsu.us-east-2.aws.neon.tech/pulsodb?sslmode=require"
+}
+
+model users {
+  id         String   @id @default(uuid())
+  email      String   @unique
+  password   String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Transaction {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  date            DateTime  @db.Timestamp(6)
+  tipo            String
+  categoria       String
+  subcategoria    String?
+  item            String?
+  glosa           String?
+  t               String?
+  numero_cta      Float
+  monto           Float
+  descripcion     String?
+  provider_client String?   @db.VarChar(200)
+  payment_method  String?   @db.VarChar(50)
+  reference       String?   @db.VarChar(100)
+  created_at      DateTime? @default(now()) @db.Timestamp(6)
+  updated_at      DateTime  @default(now()) @db.Timestamp(6)
+}
+
+model TablaPresupuesto {
+  tipo         String
+  item         String?
+  monto        Float
+  created_at   DateTime @default(now()) @db.Timestamp(6)
+  updated_at   DateTime @default(now()) @db.Timestamp(6)
+  date         DateTime @db.Timestamp(6)
+  categoria    String
+  descripcion  String?
+  subcategoria String?
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+}
+
+model ChatHistory {
+  id         Int      @id @default(autoincrement())
+  thread_id  String   @db.VarChar(255)
+  role       String   @db.VarChar(50)
+  content    String
+  created_at DateTime @default(now()) @db.Timestamp(6)
+
+  @@map("chathistory")
+}
+
+model KnowledgeBase {
+  id         Int      @id @default(autoincrement())
+  title      String
+  content    String
+  embedding  Float[]  // Almacenará los embeddings
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("knowledge_base")
+}
+
+model UfValue {
+  id        String   @id @default(uuid())
+  year      Int
+  month     Int
+  value     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([year, month])
+}
