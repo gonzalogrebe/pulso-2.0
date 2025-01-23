@@ -1,4 +1,3 @@
-// src/components/ExcelUploader.tsx
 'use client';
 
 import React, { useState } from 'react';
@@ -18,12 +17,22 @@ import {
 } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 
+interface UploadedRow {
+  tipo: string;
+  categoria: string;
+  glosa: string;
+  t: string;
+  monto: number;
+  numero_cta: string;
+  date: string;
+}
+
 export default function ExcelUploader() {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [uploadedData, setUploadedData] = useState<any[]>([]);
+  const [uploadedData, setUploadedData] = useState<UploadedRow[]>([]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -53,10 +62,10 @@ export default function ExcelUploader() {
         body: formData,
       });
 
-      const data = await response.json();
+      const data: { message: string; insertedData: UploadedRow[] } = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Error desconocido.');
+        throw new Error(data.message || 'Error desconocido.');
       }
 
       setSuccessMessage(data.message);
@@ -144,11 +153,10 @@ export default function ExcelUploader() {
                     <TableCell>{row.monto}</TableCell>
                     <TableCell>{row.numero_cta}</TableCell>
                     <TableCell>
-  {new Date(row.date).toLocaleDateString('es-CL', {
-    timeZone: 'UTC',
-  })}
-</TableCell>
-
+                      {new Date(row.date).toLocaleDateString('es-CL', {
+                        timeZone: 'UTC',
+                      })}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
