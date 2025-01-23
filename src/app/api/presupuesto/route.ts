@@ -1,31 +1,47 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+interface PresupuestoInput {
+  date: string;
+  tipo: string;
+  categoria: string;
+  subcategoria: string;
+  item: string;
+  monto: number;
+  descripcion: string;
+}
+
 export async function GET() {
   try {
-    // Devuelve todos los presupuestos (ajusta a tu preferencia)
     const presupuestos = await prisma.tablaPresupuesto.findMany({
       orderBy: { date: 'desc' }
     });
     return NextResponse.json(presupuestos, { status: 200 });
-  } catch (error: any) {
-    console.error('Error al listar presupuestos:', error);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error('Error al listar presupuestos:', error.message);
+      return NextResponse.json(
+        {
+          error: 'Error al listar presupuestos',
+          details: error.message
+        },
+        { status: 500 }
+      );
+    }
+    console.error('Error desconocido al listar presupuestos:', error);
     return NextResponse.json(
       {
-        error: 'Error al listar presupuestos',
-        details: error.message
+        error: 'Error desconocido al listar presupuestos'
       },
       { status: 500 }
     );
   }
 }
 
-// POST -> Crear un nuevo presupuesto
 export async function POST(request: Request) {
   try {
-    const data = await request.json();
+    const data: PresupuestoInput = await request.json();
 
-    // Crea el nuevo presupuesto
     const presupuestoCreado = await prisma.tablaPresupuesto.create({
       data: {
         date: new Date(data.date),
@@ -33,19 +49,27 @@ export async function POST(request: Request) {
         categoria: data.categoria,
         subcategoria: data.subcategoria,
         item: data.item,
-        monto: Number(data.monto),
+        monto: data.monto,
         descripcion: data.descripcion
       }
     });
 
-    // Devuelve el presupuesto creado con código 201 (created)
     return NextResponse.json(presupuestoCreado, { status: 201 });
-  } catch (error: any) {
-    console.error('Error al crear el presupuesto:', error);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error('Error al crear el presupuesto:', error.message);
+      return NextResponse.json(
+        {
+          error: 'Error al crear el presupuesto',
+          details: error.message
+        },
+        { status: 500 }
+      );
+    }
+    console.error('Error desconocido al crear el presupuesto:', error);
     return NextResponse.json(
       {
-        error: 'Error al crear el presupuesto',
-        details: error.message
+        error: 'Error desconocido al crear el presupuesto'
       },
       { status: 500 }
     );
