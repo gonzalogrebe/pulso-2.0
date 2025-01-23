@@ -1,5 +1,3 @@
-// app/admin/uf/page.tsx
-
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -52,9 +50,14 @@ const UfManagementPage: React.FC = () => {
       if (!res.ok) throw new Error('Error fetching UF values');
       const data: UfValue[] = await res.json();
       setUfValues(data);
-    } catch (err: any) {
-      console.error(err);
-      setError(err.message || 'Error fetching UF values');
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.error(err.message);
+        setError(err.message);
+      } else {
+        console.error('Error desconocido');
+        setError('Error desconocido al cargar valores UF');
+      }
     } finally {
       setLoading(false);
     }
@@ -68,7 +71,6 @@ const UfManagementPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validaciones básicas
     if (form.month < 1 || form.month > 12) {
       setSnackbar({ open: true, message: 'El mes debe estar entre 1 y 12.', severity: 'error' });
       return;
@@ -86,19 +88,20 @@ const UfManagementPage: React.FC = () => {
         throw new Error(errorData.error || 'Error saving UF value');
       }
 
-      const savedUf: UfValue = await res.json();
+      await res.json(); // No necesitas guardar `savedUf` si no lo usas directamente
 
       setSnackbar({ open: true, message: 'Valor de UF guardado correctamente.', severity: 'success' });
-
-      // Actualizar la lista de UF
-      fetchUfValues();
-
-      // Resetear el formulario
-      setForm({ year: 2020, month: 1, value: 0 });
+      fetchUfValues(); // Actualizar la lista de UF
+      setForm({ year: 2020, month: 1, value: 0 }); // Resetear el formulario
       setEditingId(null);
-    } catch (err: any) {
-      console.error(err);
-      setSnackbar({ open: true, message: err.message || 'Error saving UF value.', severity: 'error' });
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.error(err.message);
+        setSnackbar({ open: true, message: err.message, severity: 'error' });
+      } else {
+        console.error('Error desconocido');
+        setSnackbar({ open: true, message: 'Error desconocido al guardar el valor.', severity: 'error' });
+      }
     }
   };
 
@@ -117,12 +120,15 @@ const UfManagementPage: React.FC = () => {
       }
 
       setSnackbar({ open: true, message: 'Valor de UF eliminado correctamente.', severity: 'success' });
-
-      // Actualizar la lista de UF
       fetchUfValues();
-    } catch (err: any) {
-      console.error(err);
-      setSnackbar({ open: true, message: err.message || 'Error deleting UF value.', severity: 'error' });
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.error(err.message);
+        setSnackbar({ open: true, message: err.message, severity: 'error' });
+      } else {
+        console.error('Error desconocido');
+        setSnackbar({ open: true, message: 'Error desconocido al eliminar el valor.', severity: 'error' });
+      }
     }
   };
 
