@@ -228,7 +228,6 @@ export default function ExpensesPage() {
   }));
 
   // Calcular totales para el mes actual
-  const totalVariance = monthSummary ? monthSummary.total.actual - monthSummary.total.budget : 0;
 
   return (
     <MUI.Box sx={{ p: 3 }}>
