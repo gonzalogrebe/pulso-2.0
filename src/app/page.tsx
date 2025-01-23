@@ -6,12 +6,9 @@ import React, { useState, useEffect } from 'react';
 import * as MUI from '@mui/material';
 import ExpensesChart from '../components/dashboard/ExpensesChart';
 import IncomeChart from '../components/dashboard/IncomeChart';
-import AlertsTableDetailed from '../components/dashboard/AlertsTableDetailed';
 import SummaryTable from '../components/dashboard/SummaryTable';
-
 import { Transaction } from '../types/transaction';
 import { Presupuesto } from '../types/presupuesto';
-import { AlertEntry } from '../types/alertEntry';
 import { TotalByTipo } from '../types/totalByTipo';
 import { transformTransactions } from '../utils/totalbytipo';
 import dayjs, { Dayjs } from 'dayjs';
@@ -74,8 +71,6 @@ export default function Home() {
   const [errorTransactions, setErrorTransactions] = React.useState<string | null>(null);
   const [errorPresupuestos, setErrorPresupuestos] = React.useState<string | null>(null);
 
-  // Estado para Alertas Detalladas
-  const [alertEntries, setAlertEntries] = React.useState<AlertEntry[]>([]);
 
   // Estados para las fechas de los gráficos
   const [chartStartDate, setChartStartDate] = React.useState<Dayjs | null>(
@@ -291,22 +286,6 @@ export default function Home() {
                 <MUI.CircularProgress />
               ) : (
                 <MUI.Typography color="error">{hasError}</MUI.Typography>
-              )}
-            </MUI.Grid>
-            {/* Sección de Últimas Alertas Detalladas */}
-            <MUI.Grid item xs={12}>
-              {isLoading ? (
-                <MUI.CircularProgress />
-              ) : hasError ? (
-                <MUI.Typography color="error">
-                  {errorTransactions || errorPresupuestos || error}
-                </MUI.Typography>
-              ) : (
-                <AlertsTableDetailed
-                  alertEntries={alertEntries}
-                  formattedMonthYear={formattedMonthYear(chartStartDate, chartEndDate)} // Pasar fechas formateadas si es necesario
-                  totalesPorTipo={[]} // Ajustar si es necesario
-                />
               )}
             </MUI.Grid>
           </MUI.Grid>
