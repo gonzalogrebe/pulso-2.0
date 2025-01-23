@@ -1,14 +1,15 @@
-// src/app/layout.tsx
 'use client';
+
 import { Box, AppBar, Toolbar, IconButton } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useState } from 'react';
-import Sidebar, { drawerWidth } from '@/components/layout/Sidebar';
+import Sidebar from '@/components/layout/Sidebar';
+import '@/app/globals.css';
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -18,7 +19,7 @@ export default function RootLayout({
 
   return (
     <html lang="es">
-      <body style={{ margin: 0, padding: 0 }}>
+      <body>
         <Box sx={{ display: 'flex' }}>
           {/* AppBar móvil */}
           <AppBar
@@ -41,29 +42,27 @@ export default function RootLayout({
             </Toolbar>
           </AppBar>
 
+          {/* Sidebar */}
           <Sidebar
             mobileOpen={mobileOpen}
             onMobileClose={handleDrawerToggle}
           />
 
+          {/* Contenido Principal */}
           <Box
-            component="main"
-            sx={{
-              flexGrow: 1,
-              p: 4,
-              width: {
-                xs: '100%',
-                sm: `calc(100% - ${drawerWidth}px)`
-              },
-              ml: { sm: `${drawerWidth}px` },
-              mt: { xs: '64px', sm: 0 },
-              minHeight: '100vh',
-              backgroundColor: '#f5f5f5',
-              overflowX: 'hidden'
-            }}
-          >
-            {children}
-          </Box>
+  component="main"
+  className="main-content"
+  sx={{
+    flexGrow: 1,
+    padding: 3,
+    marginLeft: { sm: '0px !important' }, // Aplicado con !important
+    marginTop: { xs: '64px', sm: 0 },
+    backgroundColor: '#f5f5f5',
+    overflowX: 'hidden',
+  }}
+>
+  {children}
+</Box>
         </Box>
       </body>
     </html>
