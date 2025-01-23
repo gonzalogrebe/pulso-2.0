@@ -1,20 +1,13 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import * as MUI from "@mui/material";
+import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import ExpensesChart from "../components/dashboard/ExpensesChart";
 import IncomeChart from "../components/dashboard/IncomeChart";
 import SummaryTable from "../components/dashboard/SummaryTable";
-import { Transaction } from "../types/transaction";
-import { TotalByTipo } from "../types/totalByTipo";
-import { transformTransactions } from "../utils/totalbytipo";
 import dayjs, { Dayjs } from "dayjs";
-import utc from "dayjs/plugin/utc";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { UfValue } from "@prisma/client";
-
-dayjs.extend(utc);
 
 interface ChartData {
   labels: string[];
@@ -28,133 +21,126 @@ interface ChartData {
   };
 }
 
+interface UfValue {
+  date: string;
+  value: number;
+}
+
 export default function Home() {
-  // Estados para Transacciones
-  const [transactions, setTransactions] = useState<Transaction[] | null>(null);
-  const [loadingTransactions, setLoadingTransactions] = useState<boolean>(true);
-  const [errorTransactions, setErrorTransactions] = useState<string | null>(null);
-
-  // Estados para Fechas
-  const [tableStartDate, setTableStartDate] = useState<Dayjs | null>(dayjs("2020-01-01"));
-  const [tableEndDate, setTableEndDate] = useState<Dayjs | null>(dayjs("2020-12-31"));
-
-  // Estados para Gráficos
+  const [startDate, setStartDate] = useState<Dayjs | null>(dayjs("2019-08-01"));
+  const [endDate, setEndDate] = useState<Dayjs | null>(dayjs("2020-02-28"));
   const [chartData, setChartData] = useState<ChartData | null>(null);
-  const [loadingChartData, setLoadingChartData] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // Estado para Valores de UF
   const [ufValues, setUfValues] = useState<UfValue[]>([]);
 
-  // Función para obtener datos desde la API
-  const fetchChartData = async (start: Dayjs, end: Dayjs) => {
+  // Función para obtener datos del gráfico
+  const fetchChartData = async (startDate: Dayjs | null, endDate: Dayjs | null) => {
+    if (!startDate || !endDate) return;
+  
+    const formattedStart = startDate.format("YYYY-MM-DD");
+    const formattedEnd = endDate.format("YYYY-MM-DD");
+  
     try {
-      setLoadingChartData(true);
-      setError(null);
-
-      const url = `/api/chart-data?startDate=${start.format("YYYY-MM-DD")}&endDate=${end.format("YYYY-MM-DD")}`;
-      const response = await fetch(url);
-
+      const response = await fetch(`/api/chart-data?startDate=${formattedStart}&endDate=${formattedEnd}`);
+      const data = await response.json();
+  
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Error al cargar los datos del gráfico.");
+        throw new Error(data.error || "Error al cargar los datos del gráfico.");
       }
-
-      const data: ChartData = await response.json();
+  
+      // Establecer los datos directamente en el estado
       setChartData(data);
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("Error desconocido");
-      }
-    } finally {
-      setLoadingChartData(false);
+    } catch (error) {
+      console.error("Error al obtener los datos del gráfico:", error);
+    }
+  };
+  
+  const expensesArray = chartData?.expenses
+  ? Object.entries(chartData.expenses).map(([key, value]) => ({
+      tipo: key,
+      total: value.reduce((acc, curr) => acc + curr, 0), // Suma los valores
+      categorias: [], // Ajusta según sea necesario
+      date: "2020-01-01", // Placeholder para pruebas
+    }))
+  : [];
+
+
+  // Función para obtener valores de UF
+  const fetchUfValues = async () => {
+    try {
+      const response = await fetch("/api/uf");
+      const data = await response.json();
+      setUfValues(data);
+    } catch (error) {
+      console.error("Error al obtener los valores de UF:", error);
     }
   };
 
-  // Cargar datos de transacciones
+  // Actualizar datos cuando cambien las fechas
   useEffect(() => {
-    const fetchTransactions = async () => {
-      try {
-        const response = await fetch("/api/transactions");
-        if (!response.ok) throw new Error("Error al obtener transacciones.");
-        const data: Transaction[] = await response.json();
-        setTransactions(data);
-      } catch (err: unknown) {
-        if (err instanceof Error) {
-          setErrorTransactions(err.message);
-        } else {
-          setErrorTransactions("Error desconocido");
-        }
-      } finally {
-        setLoadingTransactions(false);
-      }
-    };
+    fetchChartData(startDate, endDate);
+  }, [startDate, endDate]);
 
-    fetchTransactions();
-  }, []);
-
-  // Cargar valores de UF
+  // Obtener valores de UF al montar el componente
   useEffect(() => {
-    const fetchUfValues = async () => {
-      try {
-        const response = await fetch("/api/uf");
-        if (!response.ok) throw new Error("Error al obtener valores de UF.");
-        const data: UfValue[] = await response.json();
-        setUfValues(data);
-      } catch (err: unknown) {
-        console.error(err);
-      }
-    };
-
     fetchUfValues();
   }, []);
 
-  // Filtrar transacciones por rango de fechas
-  const filteredTransactions = useMemo(() => {
-    if (!transactions) return [];
-    return transactions.filter((tx) => {
-      const txDate = dayjs.utc(tx.date).startOf("day");
-      const startDateUTC = tableStartDate ? tableStartDate.utc().startOf("day") : null;
-      const endDateUTC = tableEndDate ? tableEndDate.utc().endOf("day") : null;
-
-      if (startDateUTC && txDate.isBefore(startDateUTC, "day")) return false;
-      if (endDateUTC && txDate.isAfter(endDateUTC, "day")) return false;
-      return true;
-    });
-  }, [transactions, tableStartDate, tableEndDate]);
-
-  // Transformar datos para la tabla resumen
-  const totalByTipo: TotalByTipo[] = useMemo(() => transformTransactions(filteredTransactions), [filteredTransactions]);
-
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <MUI.Box sx={{ maxWidth: "100%", overflow: "hidden", p: 3 }}>
+      <MUI.Box sx={{ maxWidth: "100%", p: 3 }}>
         <MUI.Typography variant="h4" component="h1" sx={{ mb: 2 }}>
           Dashboard
         </MUI.Typography>
 
-        <MUI.Grid container spacing={3}>
+        {/* Selectores de Fecha */}
+        <MUI.Grid container spacing={2} sx={{ mb: 3 }}>
           <MUI.Grid item xs={12} md={6}>
-            <ExpensesChart data={chartData?.expenses} labels={chartData?.labels} />
+            <DatePicker
+              label="Fecha Inicio"
+              value={startDate}
+              onChange={(newDate) => setStartDate(newDate)}
+              renderInput={(params) => <MUI.TextField {...params} fullWidth />}
+            />
           </MUI.Grid>
           <MUI.Grid item xs={12} md={6}>
-            <IncomeChart data={chartData?.incomes} labels={chartData?.labels} />
+            <DatePicker
+              label="Fecha Fin"
+              value={endDate}
+              onChange={(newDate) => setEndDate(newDate)}
+              renderInput={(params) => <MUI.TextField {...params} fullWidth />}
+            />
+          </MUI.Grid>
+        </MUI.Grid>
+
+        {/* Gráficos */}
+        <MUI.Grid container spacing={3}>
+        <MUI.Grid item xs={12} md={6}>
+          <ExpensesChart
+            data={chartData?.expenses || { budget: [], actual: [] }}
+            labels={chartData?.labels || []}
+          />
+        </MUI.Grid>
+
+          <MUI.Grid item xs={12} md={6}>
+            <IncomeChart data={chartData?.incomes || { budget: [], actual: [] }} labels={chartData?.labels || []} />
           </MUI.Grid>
 
+          {/* Tabla */}
           <MUI.Grid item xs={12}>
-            {loadingTransactions || loadingChartData ? (
-              <MUI.CircularProgress />
+            {chartData ? (
+            <SummaryTable
+            totalByTipo={expensesArray}
+            tableStartDate={startDate}
+            tableEndDate={endDate}
+            ufValues={ufValues}
+          />
+          
+          
+          
             ) : (
-              <SummaryTable
-                totalByTipo={totalByTipo}
-                tableStartDate={tableStartDate}
-                tableEndDate={tableEndDate}
-                setTableStartDate={setTableStartDate}
-                setTableEndDate={setTableEndDate}
-                ufValues={ufValues}
-              />
+              <MUI.Typography variant="body1" color="textSecondary">
+                No hay datos para mostrar en la tabla.
+              </MUI.Typography>
             )}
           </MUI.Grid>
         </MUI.Grid>

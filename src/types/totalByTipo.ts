@@ -9,4 +9,5 @@ export interface TotalByTipo {
   tipo: 'Gastos' | 'Ingresos';
   total: number;
   categorias: CategoriaTotal[];
+  date: string; // Agrega la propiedad date para manejar las fechas
 }
