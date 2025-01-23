@@ -23,7 +23,7 @@ import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 
 
 
-const drawerWidth = 240;
+export const drawerWidth = 240;
 
 interface MenuItem {
   text: string;
