@@ -2,7 +2,6 @@
 'use client';
 import { Box, Typography } from '@mui/material';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
-import ItemsManager from '../../../components/dashboard/ItemsManager';
 import { use } from 'react';
 
 const categoryNames: { [key: string]: string } = {
