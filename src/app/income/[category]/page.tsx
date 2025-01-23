@@ -20,10 +20,6 @@ export default function IncomeCategoryPage({ params }: { params: Promise<{ categ
         <Typography variant="h4" gutterBottom>
           Ingresos - {categoryTitle}
         </Typography>
-        <ItemsManager
-          defaultFilter="income"
-          defaultCategory={categoryTitle}
-        />
       </Box>
     </DashboardLayout>
   );
